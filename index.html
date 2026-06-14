@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registro de Clientes - Fruteria</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #2d5016;
+            --secondary: #4a7c23;
+            --accent: #ff6b35;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+        .header h1 { font-size: 1.4rem; margin-bottom: 5px; }
+        .header p { font-size: 0.85rem; opacity: 0.9; }
+        .status-bar {
+            background: rgba(255,255,255,0.2);
+            padding: 8px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title { font-size: 1.1rem; color: var(--dark); font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--dark); font-weight: 500; font-size: 0.9rem; }
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(74, 124, 35, 0.1);
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media (min-width: 600px) { .form-row { grid-template-columns: 1fr 1fr; } }
+        .emotion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        @media (min-width: 500px) { .emotion-grid { grid-template-columns: repeat(4, 1fr); } }
+        .emotion-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .emotion-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .emotion-btn.selected { border-color: var(--accent); background: #fff5f2; transform: scale(1.05); }
+        .star-rating { display: flex; gap: 8px; margin-top: 10px; }
+        .star-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .star-btn:hover { border-color: var(--warning); }
+        .star-btn.selected { background: var(--warning); color: white; border-color: var(--warning); }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 8px;
+            touch-action: manipulation;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: var(--dark); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
+        @media (min-width: 500px) { .btn-grid { grid-template-columns: 1fr 1fr; } }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--dark);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 9999;
+            font-size: 0.9rem;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); color: var(--dark); }
+        .progress-container { background: #e0e0e0; border-radius: 10px; height: 8px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, var(--primary), var(--accent)); height: 100%; width: 0%; transition: width 0.5s ease; }
+        .autosave-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+        }
+        .autosave-indicator.saved { color: var(--success); }
+        .autosave-indicator.saving { color: var(--warning); }
+        .timer-display {
+            background: var(--dark);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .timer-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .timer-start { background: var(--success); color: white; }
+        .timer-stop { background: var(--danger); color: white; }
+        .timer-reset { background: var(--warning); color: var(--dark); }
+        .data-item {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .data-item-info { flex: 1; min-width: 200px; }
+        .data-item-date { font-size: 0.8rem; color: #666; }
+        .data-item-actions { display: flex; gap: 5px; }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; }
+        .rating-group { margin-bottom: 15px; }
+        .rating-label { font-size: 0.85rem; color: #666; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="autosave-indicator" id="autosaveIndicator">
+        <span id="autosaveText">Listo</span>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>Registro de Clientes - Fruteria</h1>
+            <p>Sistema de Diagnostico y Seguimiento</p>
+            <div class="status-bar">
+                <span id="currentDate"></span>
+                <span id="currentTime"></span>
+                <span id="totalRecords">0 registros</span>
+            </div>
+        </header>
+
+        <form id="surveyForm">
+            <!-- Informacion del Cliente -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Informacion del Cliente</h2>
+                </div>
+                <div class="form-group">
+                    <label for="clientName">Nombre del Cliente</label>
+                    <input type="text" id="clientName" placeholder="Nombre completo">
+                </div>
+                <div class="form-group">
+                    <label for="clientType">Tipo de Cliente</label>
+                    <select id="clientType">
+                        <option value="nuevo">Nuevo</option>
+                        <option value="frecuente">Frecuente</option>
+                        <option value="ocasional">Ocasional</option>
+                        <option value="vip">VIP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado Emocional al Entrar</label>
+                    <div class="emotion-grid" id="emotionBefore">
+                        <div class="emotion-btn" data-emotion="Neutral">Neutral</div>
+                        <div class="emotion-btn" data-emotion="Curioso">Curioso</div>
+                        <div class="emotion-btn" data-emotion="Feliz">Feliz</div>
+                        <div class="emotion-btn" data-emotion="Apurado">Apurado</div>
+                    </div>
+                    <input type="hidden" id="emotionBeforeInput">
+                </div>
+                <div class="form-group">
+                    <label for="productsBought">Productos Elegidos</label>
+                    <textarea id="productsBought" placeholder="Lista de productos..."></textarea>
+                </div>
+            </div>
+
+            <!-- Metricas de Compra -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Metricas de Compra</h2>
+                </div>
+                <div class="form-group">
+                    <label for="totalSpent">Total Gastado (Bs)</label>
+                    <input type="number" id="totalSpent" min="0" step="1" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Tiempo en la Tienda</label>
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+                    <div style="text-align: center;">
+                        <button type="button" class="timer-btn timer-start" id="timerStartBtn" onclick="startTimer()">Iniciar</button>
+                        <button type="button" class="timer-btn timer-stop" id="timerStopBtn" onclick="stopTimer()" style="display:none;">Detener</button>
+                        <button type="button" class="timer-btn timer-reset" onclick="resetTimer()">Reiniciar</button>
+                    </div>
+                    <input type="hidden" id="timeInStore" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Metodo de Pago</label>
+                    <select id="paymentMethod">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Punto">Punto</option>
+                        <option value="Pago Movil">Pago Movil</option>
+                        <option value="Mixto">Mixto</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Diagnostico Emocional Salida -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Estado Emocional al Salir</h2>
+                </div>
+                <div class="emotion-grid" id="emotionAfter">
+                    <div class="emotion-btn" data-emotion="Neutral">Neutral</div>
+                    <div class="emotion-btn" data-emotion="Curioso">Curioso</div>
+                    <div class="emotion-btn" data-emotion="Feliz">Feliz</div>
+                    <div class="emotion-btn" data-emotion="Apurado">Apurado</div>
+                    <div class="emotion-btn" data-emotion="Satisfecho">Satisfecho</div>
+                    <div class="emotion-btn" data-emotion="Decepcionado">Decepcionado</div>
+                </div>
+                <input type="hidden" id="emotionAfterInput">
+            </div>
+
+            <!-- Evaluacion de Experiencia -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Evaluacion de Experiencia</h2>
+                </div>
+                <div class="rating-group">
+                    <div class="rating-label">Experiencia General</div>
+                    <div class="star-rating" id="experienceRating">
+                        <button type="button" class="star-btn" data-value="1">1</button>
+                        <button type="button" class="star-btn" data-value="2">2</button>
+                        <button type="button" class="star-btn" data-value="3">3</button>
+                        <button type="button" class="star-btn" data-value="4">4</button>
+                        <button type="button" class="star-btn" data-value="5">5</button>
+                    </div>
+                    <input type="hidden" id="experienceRatingInput">
+                </div>
+                <div class="rating-group">
+                    <div class="rating-label">Calidad de la Fruta</div>
+                    <div class="star-rating" id="qualityRating">
+                        <button type="button" class="star-btn" data-value="1">1</button>
+                        <button type="button" class="star-btn" data-value="2">2</button>
+                        <button type="button" class="star-btn" data-value="3">3</button>
+                        <button type="button" class="star-btn" data-value="4">4</button>
+                        <button type="button" class="star-btn" data-value="5">5</button>
+                    </div>
+                    <input type="hidden" id="qualityRatingInput">
+                </div>
+                <div class="rating-group">
+                    <div class="rating-label">Atencion del Personal</div>
+                    <div class="star-rating" id="serviceRating">
+                        <button type="button" class="star-btn" data-value="1">1</button>
+                        <button type="button" class="star-btn" data-value="2">2</button>
+                        <button type="button" class="star-btn" data-value="3">3</button>
+                        <button type="button" class="star-btn" data-value="4">4</button>
+                        <button type="button" class="star-btn" data-value="5">5</button>
+                    </div>
+                    <input type="hidden" id="serviceRatingInput">
+                </div>
+            </div>
+
+            <!-- Observaciones del Trabajador -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Observaciones del Trabajador</h2>
+                </div>
+                <div class="form-group">
+                    <label for="workerName">Nombre del Trabajador</label>
+                    <input type="text" id="workerName" placeholder="Su nombre">
+                </div>
+                <div class="form-group">
+                    <label for="workerObservations">Observaciones</label>
+                    <textarea id="workerObservations" placeholder="Notas adicionales..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="followUpRequired">Requiere Seguimiento</label>
+                    <select id="followUpRequired">
+                        <option value="No">No</option>
+                        <option value="Si">Si</option>
+                        <option value="Urgente">Urgente</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="card">
+                <div class="progress-container">
+                    <div class="progress-bar" id="formProgress"></div>
+                </div>
+                <div class="btn-grid">
+                    <button type="button" class="btn btn-primary" onclick="autoSave()">Guardar Temporal</button>
+                    <button type="button" class="btn btn-success" onclick="saveAndGeneratePDF()">Guardar y Generar PDF</button>
+                    <button type="button" class="btn btn-info" onclick="exportToPDF()">Generar PDF</button>
+                    <button type="button" class="btn btn-warning" onclick="clearForm()">Nuevo Cliente</button>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="viewSavedData()" style="margin-top: 10px;">Ver Base de Datos</button>
+            </div>
+        </form>
+
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+        let surveyData = {};
+        let autoSaveInterval;
+        let timerInterval = null;
+        let timerSeconds = 0;
+        const DB_NAME = 'fruteria_clientes_db';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDateTime();
+            loadAutoSavedData();
+            setupEventListeners();
+            startAutoSave();
+            updateRecordCount();
+            showToast('Sistema listo', 'success');
+        });
+
+        function initializeDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('es-VE');
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'});
+            setInterval(() => {
+                const newNow = new Date();
+                document.getElementById('currentTime').textContent = newNow.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'});
+            }, 60000);
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('#emotionBefore .emotion-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#emotionBefore .emotion-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('emotionBeforeInput').value = this.dataset.emotion;
+                    updateFormData();
+                });
+            });
+
+            document.querySelectorAll('#emotionAfter .emotion-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#emotionAfter .emotion-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('emotionAfterInput').value = this.dataset.emotion;
+                    updateFormData();
+                });
+            });
+
+            document.querySelectorAll('.star-rating').forEach(rating => {
+                rating.querySelectorAll('.star-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const value = this.dataset.value;
+                        rating.querySelectorAll('.star-btn').forEach(b => {
+                            b.classList.toggle('selected', parseInt(b.dataset.value) <= parseInt(value));
+                        });
+                        const inputId = rating.id.replace('Rating', 'RatingInput');
+                        document.getElementById(inputId).value = value;
+                        updateFormData();
+                    });
+                });
+            });
+
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('change', updateFormData);
+                field.addEventListener('input', debounce(updateFormData, 1000));
+            });
+
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedData()) {
+                    autoSave();
+                }
+            });
+        }
+
+        function updateFormData() {
+            surveyData = {
+                clientName: sanitizeInput(document.getElementById('clientName').value),
+                clientType: document.getElementById('clientType').value,
+                emotionBefore: document.getElementById('emotionBeforeInput').value,
+                productsBought: sanitizeInput(document.getElementById('productsBought').value),
+                totalSpent: document.getElementById('totalSpent').value,
+                timeInStore: document.getElementById('timeInStore').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                emotionAfter: document.getElementById('emotionAfterInput').value,
+                experienceRating: document.getElementById('experienceRatingInput').value,
+                qualityRating: document.getElementById('qualityRatingInput').value,
+                serviceRating: document.getElementById('serviceRatingInput').value,
+                workerName: sanitizeInput(document.getElementById('workerName').value),
+                workerObservations: sanitizeInput(document.getElementById('workerObservations').value),
+                followUpRequired: document.getElementById('followUpRequired').value,
+                timestamp: new Date().toISOString()
+            };
+            updateProgressBar();
+        }
+
+        function sanitizeInput(str) {
+            if (!str) return '';
+            return str.replace(/[<>]/g, '').trim();
+        }
+
+        function updateProgressBar() {
+            const requiredFields = ['clientName', 'emotionBefore', 'emotionAfter', 'experienceRating'];
+            const filledFields = requiredFields.filter(field => surveyData[field] && surveyData[field].trim() !== '').length;
+            const percentage = (filledFields / requiredFields.length) * 100;
+            document.getElementById('formProgress').style.width = percentage + '%';
+        }
+
+        function startAutoSave() {
+            autoSaveInterval = setInterval(() => {
+                if (hasUnsavedData()) autoSave();
+            }, 30000);
+        }
+
+        function hasUnsavedData() {
+            return surveyData.clientName && surveyData.clientName.trim() !== '';
+        }
+
+        function autoSave() {
+            updateFormData();
+            localStorage.setItem('fruteria_autosave', JSON.stringify(surveyData));
+            showAutosaveIndicator('saved', 'Guardado');
+            setTimeout(() => showAutosaveIndicator('saving', 'Auto-guardando...'), 2000);
+        }
+
+        function loadAutoSavedData() {
+            const saved = localStorage.getItem('fruteria_autosave');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.clientName) document.getElementById('clientName').value = data.clientName;
+                if (data.clientType) document.getElementById('clientType').value = data.clientType;
+                if (data.productsBought) document.getElementById('productsBought').value = data.productsBought;
+                if (data.totalSpent) document.getElementById('totalSpent').value = data.totalSpent;
+                if (data.timeInStore) {
+                    document.getElementById('timeInStore').value = data.timeInStore;
+                    timerSeconds = parseInt(data.timeInStore);
+                    updateTimerDisplay();
+                }
+                if (data.paymentMethod) document.getElementById('paymentMethod').value = data.paymentMethod;
+                if (data.experienceRating) {
+                    document.getElementById('experienceRatingInput').value = data.experienceRating;
+                    document.querySelectorAll('#experienceRating .star-btn').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.value) <= parseInt(data.experienceRating));
+                    });
+                }
+                if (data.qualityRating) {
+                    document.getElementById('qualityRatingInput').value = data.qualityRating;
+                    document.querySelectorAll('#qualityRating .star-btn').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.value) <= parseInt(data.qualityRating));
+                    });
+                }
+                if (data.serviceRating) {
+                    document.getElementById('serviceRatingInput').value = data.serviceRating;
+                    document.querySelectorAll('#serviceRating .star-btn').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.value) <= parseInt(data.serviceRating));
+                    });
+                }
+                if (data.workerName) document.getElementById('workerName').value = data.workerName;
+                if (data.workerObservations) document.getElementById('workerObservations').value = data.workerObservations;
+                if (data.followUpRequired) document.getElementById('followUpRequired').value = data.followUpRequired;
+                if (data.emotionBefore) {
+                    document.getElementById('emotionBeforeInput').value = data.emotionBefore;
+                    document.querySelectorAll('#emotionBefore .emotion-btn').forEach(b => {
+                        b.classList.toggle('selected', b.dataset.emotion === data.emotionBefore);
+                    });
+                }
+                if (data.emotionAfter) {
+                    document.getElementById('emotionAfterInput').value = data.emotionAfter;
+                    document.querySelectorAll('#emotionAfter .emotion-btn').forEach(b => {
+                        b.classList.toggle('selected', b.dataset.emotion === data.emotionAfter);
+                    });
+                }
+                showToast('Datos recuperados', 'info');
+            }
+        }
+
+        function showAutosaveIndicator(status, text) {
+            const indicator = document.getElementById('autosaveIndicator');
+            const textEl = document.getElementById('autosaveText');
+            indicator.className = 'autosave-indicator ' + status;
+            textEl.textContent = text;
+        }
+
+        // Timer functions
+        function startTimer() {
+            if (timerInterval) return;
+            document.getElementById('timerStartBtn').style.display = 'none';
+            document.getElementById('timerStopBtn').style.display = 'inline-block';
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                updateTimerDisplay();
+                document.getElementById('timeInStore').value = timerSeconds;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            document.getElementById('timerStartBtn').style.display = 'inline-block';
+            document.getElementById('timerStopBtn').style.display = 'none';
+            updateFormData();
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timerSeconds = 0;
+            updateTimerDisplay();
+            document.getElementById('timeInStore').value = 0;
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timerDisplay').textContent =
+                String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        function saveToDatabase(data) {
+            let db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+            data.id = Date.now().toString();
+            data.createdAt = new Date().toISOString();
+            db.push(data);
+            localStorage.setItem(DB_NAME, JSON.stringify(db));
+            updateRecordCount();
+            return data;
+        }
+
+        function updateRecordCount() {
+            const db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+            document.getElementById('totalRecords').textContent = db.length + ' registros';
+        }
+
+        async function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            const data = collectFormData();
+
+            pdf.setFillColor(45, 80, 22);
+            pdf.rect(0, 0, 210, 40, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(18);
+            pdf.text('REGISTRO DE CLIENTE - FRUTERIA', 105, 20, { align: 'center' });
+            pdf.setFontSize(11);
+            pdf.text('Fecha: ' + new Date().toLocaleDateString('es-VE') + ' | Hora: ' + new Date().toLocaleTimeString('es-VE'), 105, 30, { align: 'center' });
+
+            let yPos = 55;
+            pdf.setTextColor(0, 0, 0);
+
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(10, yPos - 10, 190, 35, 'F');
+            pdf.setFontSize(13);
+            pdf.setTextColor(45, 80, 22);
+            pdf.text('INFORMACION DEL CLIENTE', 15, yPos);
+            pdf.setFontSize(10);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('Nombre: ' + (data.clientName || 'N/A'), 15, yPos + 10);
+            pdf.text('Tipo: ' + (data.clientType || 'N/A'), 110, yPos + 10);
+            pdf.text('Emocion al entrar: ' + (data.emotionBefore || 'N/A'), 15, yPos + 18);
+            pdf.text('Productos: ' + (data.productsBought || 'N/A'), 15, yPos + 26);
+
+            yPos += 45;
+
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(10, yPos - 10, 190, 35, 'F');
+            pdf.setFontSize(13);
+            pdf.setTextColor(45, 80, 22);
+            pdf.text('METRICAS DE COMPRA', 15, yPos);
+            pdf.setFontSize(10);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('Total Gastado: Bs ' + (data.totalSpent || '0'), 15, yPos + 10);
+            pdf.text('Tiempo en tienda: ' + formatTime(data.timeInStore), 110, yPos + 10);
+            pdf.text('Metodo de pago: ' + (data.paymentMethod || 'N/A'), 15, yPos + 18);
+
+            yPos += 45;
+
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(10, yPos - 10, 190, 35, 'F');
+            pdf.setFontSize(13);
+            pdf.setTextColor(45, 80, 22);
+            pdf.text('ESTADO EMOCIONAL AL SALIR', 15, yPos);
+            pdf.setFontSize(10);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('Emocion: ' + (data.emotionAfter || 'N/A'), 15, yPos + 10);
+
+            yPos += 45;
+
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(10, yPos - 10, 190, 35, 'F');
+            pdf.setFontSize(13);
+            pdf.setTextColor(45, 80, 22);
+            pdf.text('EVALUACION DE EXPERIENCIA', 15, yPos);
+            pdf.setFontSize(10);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('Experiencia General: ' + (data.experienceRating || '0') + '/5', 15, yPos + 10);
+            pdf.text('Calidad Fruta: ' + (data.qualityRating || '0') + '/5', 110, yPos + 10);
+            pdf.text('Atencion Personal: ' + (data.serviceRating || '0') + '/5', 15, yPos + 18);
+
+            yPos += 45;
+
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(10, yPos - 10, 190, 35, 'F');
+            pdf.setFontSize(13);
+            pdf.setTextColor(45, 80, 22);
+            pdf.text('OBSERVACIONES DEL TRABAJADOR', 15, yPos);
+            pdf.setFontSize(10);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('Trabajador: ' + (data.workerName || 'N/A'), 15, yPos + 10);
+            pdf.text('Seguimiento: ' + (data.followUpRequired || 'No'), 110, yPos + 10);
+            if (data.workerObservations) {
+                pdf.text('Notas: ' + data.workerObservations.substring(0, 80), 15, yPos + 18);
+            }
+
+            pdf.setFontSize(9);
+            pdf.setTextColor(128, 128, 128);
+            pdf.text('Generado: ' + new Date().toLocaleString('es-VE'), 105, 280, { align: 'center' });
+
+            const fileName = 'Registro_' + (data.clientName || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.pdf';
+            pdf.save(fileName);
+            showToast('PDF generado', 'success');
+        }
+
+        function formatTime(seconds) {
+            const s = parseInt(seconds) || 0;
+            const mins = Math.floor(s / 60);
+            const secs = s % 60;
+            return mins + ' min ' + secs + ' seg';
+        }
+
+        function collectFormData() {
+            updateFormData();
+            return surveyData;
+        }
+
+        async function saveAndGeneratePDF() {
+            if (!validateForm()) {
+                showToast('Complete los campos obligatorios', 'error');
+                return;
+            }
+            const data = collectFormData();
+            try {
+                saveToDatabase(data);
+                await exportToPDF();
+                localStorage.removeItem('fruteria_autosave');
+                showToast('Datos guardados y PDF generado', 'success');
+                setTimeout(() => clearForm(), 1500);
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        function validateForm() {
+            const required = ['clientName', 'emotionBefore', 'emotionAfter', 'experienceRating'];
+            return required.every(field => surveyData[field] && surveyData[field].trim() !== '');
+        }
+
+        function clearForm() {
+            if (confirm('Limpiar formulario?')) {
+                document.getElementById('surveyForm').reset();
+                surveyData = {};
+                localStorage.removeItem('fruteria_autosave');
+                document.querySelectorAll('.emotion-btn, .star-btn').forEach(el => el.classList.remove('selected'));
+                document.getElementById('formProgress').style.width = '0%';
+                resetTimer();
+                showToast('Formulario limpiado', 'info');
+            }
+        }
+
+        function viewSavedData() {
+            const db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+            if (db.length === 0) {
+                showToast('No hay registros', 'warning');
+                return;
+            }
+            let html = '<h3>Base de Datos (' + db.length + ' registros)</h3>';
+            db.slice().reverse().forEach(record => {
+                html += '<div class="data-item">' +
+                    '<div class="data-item-info"><strong>' + escapeHtml(record.clientName) + '</strong><br>' +
+                    '<span class="data-item-date">' + record.createdAt.split('T')[0] + ' - Bs ' + (record.totalSpent || '0') + '</span><br>' +
+                    '<small>Exp: ' + (record.experienceRating || '0') + '/5 | Salio: ' + (record.emotionAfter || 'N/A') + '</small></div>' +
+                    '<div class="data-item-actions">' +
+                    '<button class="btn btn-small btn-warning" onclick="exportSinglePDF(\'' + record.id + '\')">PDF</button>' +
+                    '<button class="btn btn-small btn-danger" onclick="deleteRecord(\'' + record.id + '\')">Borrar</button>' +
+                    '</div></div>';
+            });
+            html += '<button class="btn btn-primary" onclick="exportAllData()" style="margin-top:10px;">Exportar JSON</button>';
+            html += '<button class="btn btn-danger" onclick="clearAllData()" style="margin-top:10px;">Borrar Todo</button>';
+
+            const modal = document.createElement('div');
+            modal.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;">' +
+                '<div style="background:white;border-radius:15px;padding:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;">' +
+                html +
+                '<button class="btn btn-primary" onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="margin-top:15px;">Cerrar</button>' +
+                '</div></div>';
+            document.body.appendChild(modal);
+        }
+
+        function exportSinglePDF(id) {
+            const db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+            const record = db.find(r => r.id === id);
+            if (record) {
+                surveyData = record;
+                populateFormFromData(record);
+                exportToPDF();
+            }
+        }
+
+        function populateFormFromData(data) {
+            if (data.clientName) document.getElementById('clientName').value = data.clientName;
+            if (data.clientType) document.getElementById('clientType').value = data.clientType;
+            if (data.productsBought) document.getElementById('productsBought').value = data.productsBought;
+            if (data.totalSpent) document.getElementById('totalSpent').value = data.totalSpent;
+            if (data.paymentMethod) document.getElementById('paymentMethod').value = data.paymentMethod;
+            if (data.workerName) document.getElementById('workerName').value = data.workerName;
+            if (data.workerObservations) document.getElementById('workerObservations').value = data.workerObservations;
+            if (data.followUpRequired) document.getElementById('followUpRequired').value = data.followUpRequired;
+            if (data.emotionBefore) {
+                document.getElementById('emotionBeforeInput').value = data.emotionBefore;
+                document.querySelectorAll('#emotionBefore .emotion-btn').forEach(b => {
+                    b.classList.toggle('selected', b.dataset.emotion === data.emotionBefore);
+                });
+            }
+            if (data.emotionAfter) {
+                document.getElementById('emotionAfterInput').value = data.emotionAfter;
+                document.querySelectorAll('#emotionAfter .emotion-btn').forEach(b => {
+                    b.classList.toggle('selected', b.dataset.emotion === data.emotionAfter);
+                });
+            }
+            ['experienceRating', 'qualityRating', 'serviceRating'].forEach(field => {
+                if (data[field]) {
+                    document.getElementById(field + 'Input').value = data[field];
+                    document.querySelectorAll('#' + field + ' .star-btn').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.value) <= parseInt(data[field]));
+                    });
+                }
+            });
+        }
+
+        function deleteRecord(id) {
+            if (confirm('Eliminar registro?')) {
+                let db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+                db = db.filter(r => r.id !== id);
+                localStorage.setItem(DB_NAME, JSON.stringify(db));
+                updateRecordCount();
+                showToast('Registro eliminado', 'success');
+                viewSavedData();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Borrar toda la base de datos?')) {
+                localStorage.removeItem(DB_NAME);
+                updateRecordCount();
+                showToast('Base de datos eliminada', 'warning');
+                document.querySelector('.data-item').parentElement.remove();
+            }
+        }
+
+        function exportAllData() {
+            const db = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+            const dataStr = JSON.stringify(db, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'fruteria_clientes_' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            showToast('Datos exportados', 'success');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        window.autoSave = autoSave;
+        window.saveAndGeneratePDF = saveAndGeneratePDF;
+        window.exportToPDF = exportToPDF;
+        window.clearForm = clearForm;
+        window.viewSavedData = viewSavedData;
+        window.exportSinglePDF = exportSinglePDF;
+        window.deleteRecord = deleteRecord;
+        window.clearAllData = clearAllData;
+        window.exportAllData = exportAllData;
+        window.startTimer = startTimer;
+        window.stopTimer = stopTimer;
+        window.resetTimer = resetTimer;
+    </script>
+</body>
+</html>
